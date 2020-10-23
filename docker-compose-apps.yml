@@ -1,0 +1,36 @@
+version: '3.5'
+services:
+  simulator:
+    image: io.qimia.kafka/simulator
+    hostname: simulator
+    container_name: simulator
+    networks:
+      - qimia-kafka-sparkstreaming
+    command: "java -cp /app/simulator-jar-with-dependencies.jar io.qimia.kafka.simulator.SimulatorApp"
+
+  clustering:
+    image: io.qimia.kafka/sparkstreaming
+    hostname: clustering
+    container_name: clustering
+    networks:
+      - qimia-kafka-sparkstreaming
+    volumes:
+      - ./docker/spark_logs:/spark_logs
+      - ./docker/spark_configs:/spark_configs
+    command: "/spark/bin/spark-submit --name SparkStreamingClustering --deploy-mode client --properties-file /spark_configs/spark.conf --class io.qimia.kafka.sparkstreaming.Clustering /app/sparkstreaming-jar-with-dependencies.jar"
+
+  lost-connections:
+    image: io.qimia.kafka/sparkstreaming
+    hostname: lost-connections
+    container_name: lost-connections
+    networks:
+      - qimia-kafka-sparkstreaming
+    volumes:
+      - ./docker/spark_logs:/spark_logs
+      - ./docker/spark_configs:/spark_configs
+    command: "/spark/bin/spark-submit --name SparkStreamingLostConnections --deploy-mode client --properties-file /spark_configs/spark.conf --class io.qimia.kafka.sparkstreaming.LostConnections /app/sparkstreaming-jar-with-dependencies.jar"
+
+networks:
+  qimia-kafka-sparkstreaming:
+    name: qimia-kafka-sparkstreaming
+    driver: bridge

@@ -1,0 +1,32 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.qimia.kafka</groupId>
+    <artifactId>kafka-parent</artifactId>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <scala.compat.version>2.12</scala.compat.version>
+        <scala.version>2.12.10</scala.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <java.version>11</java.version>
+        <spark.version>3.0.1</spark.version>
+        <junit.jupiter.version>5.6.2</junit.jupiter.version>
+        <log4j.version>1.2.17</log4j.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <kafka.version>2.4.1</kafka.version>
+        <dockerfile.maven.version>1.4.13</dockerfile.maven.version>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+        <confluent.version>6.0.0</confluent.version>
+        <avro.version>1.9.1</avro.version>
+    </properties>
+
+    <modules>
+        <module>simulator</module>
+        <module>sparkstreaming</module>
+        <module>models</module>
+    </modules>
+
+</project>

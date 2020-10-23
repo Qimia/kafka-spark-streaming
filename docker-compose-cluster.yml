@@ -1,0 +1,175 @@
+version: '3.5'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.0.0
+    hostname: zookeeper
+    container_name: zookeeper
+    restart: on-failure
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  kafka-1:
+    image: confluentinc/cp-kafka:6.0.0
+    hostname: kafka-1
+    container_name: kafka-1
+    restart: on-failure
+    depends_on:
+      - zookeeper
+    ports:
+      - "9091:9091"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:29090,PLAINTEXT_HOST://localhost:9091
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:29090,kafka-2:29090,kafka-3:29090
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 2
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  kafka-2:
+    image: confluentinc/cp-kafka:6.0.0
+    hostname: kafka-2
+    container_name: kafka-2
+    restart: on-failure
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:29090,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:29090,kafka-2:29090,kafka-3:29090
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 2
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  kafka-3:
+    image: confluentinc/cp-kafka:6.0.0
+    hostname: kafka-3
+    container_name: kafka-3
+    restart: on-failure
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:29090,PLAINTEXT_HOST://localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:29090,kafka-2:29090,kafka-3:29090
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 2
+      CONFLUENT_METRICS_ENABLE: 'true'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:6.0.0
+    hostname: schema-registry
+    container_name: schema-registry
+    restart: on-failure
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    ports:
+      - 8081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-1:29090,kafka-2:29090,kafka-3:29090
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: none
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:6.0.0
+    hostname: control-center
+    container_name: control-center
+    restart: on-failure
+    depends_on:
+      - schema-registry
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka-1:29090,kafka-2:29090,kafka-3:29090'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_REPLICATION_FACTOR: 2
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 3
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 3
+      CONFLUENT_METRICS_TOPIC_REPLICATION: 2
+      PORT: 9021
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  spark-master:
+    image: io.qimia.kafka/spark-master:3.0.1-hadoop2.7
+    container_name: spark-master
+    restart: on-failure
+    ports:
+      - 8080:8080
+      - 7077:7077
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+    volumes:
+      - ./docker/spark_logs:/spark_logs
+      - ./docker/spark_configs:/spark_configs
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  spark-worker-1:
+    image: io.qimia.kafka/spark-worker:3.0.1-hadoop2.7
+    container_name: spark-worker-1
+    restart: on-failure
+    depends_on:
+      - spark-master
+    ports:
+      - 8082:8082
+    volumes:
+      - ./docker/spark_logs:/spark_logs
+      - ./docker/spark_configs:/spark_configs
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+    networks:
+      - qimia-kafka-sparkstreaming
+
+  spark-history-server:
+    image: io.qimia.kafka/spark-history-server:3.0.1-hadoop2.7
+    container_name: spark-history-server
+    restart: on-failure
+    depends_on:
+      - spark-master
+      - spark-worker-1
+    ports:
+      - 18080:18080
+    volumes:
+      - ./docker/spark_logs:/spark_logs
+    networks:
+      - qimia-kafka-sparkstreaming
+
+networks:
+  qimia-kafka-sparkstreaming:
+    name: qimia-kafka-sparkstreaming
+    driver: bridge
