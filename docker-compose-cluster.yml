@@ -14,7 +14,7 @@ services:
       - qimia-kafka-sparkstreaming
 
   kafka-1:
-    image: confluentinc/cp-kafka:6.0.0
+    image: confluentinc/cp-enterprise-kafka:6.0.0
     hostname: kafka-1
     container_name: kafka-1
     restart: on-failure
@@ -29,6 +29,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:29090,PLAINTEXT_HOST://localhost:9091
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_JMX_PORT: 9101
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:29090,kafka-2:29090,kafka-3:29090
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 2
@@ -38,7 +40,7 @@ services:
       - qimia-kafka-sparkstreaming
 
   kafka-2:
-    image: confluentinc/cp-kafka:6.0.0
+    image: confluentinc/cp-enterprise-kafka:6.0.0
     hostname: kafka-2
     container_name: kafka-2
     restart: on-failure
@@ -53,6 +55,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:29090,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_JMX_PORT: 9101
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:29090,kafka-2:29090,kafka-3:29090
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 2
@@ -62,7 +66,7 @@ services:
       - qimia-kafka-sparkstreaming
 
   kafka-3:
-    image: confluentinc/cp-kafka:6.0.0
+    image: confluentinc/cp-enterprise-kafka:6.0.0
     hostname: kafka-3
     container_name: kafka-3
     restart: on-failure
@@ -77,6 +81,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:29090,PLAINTEXT_HOST://localhost:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 2
+      KAFKA_JMX_PORT: 9101
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-1:29090,kafka-2:29090,kafka-3:29090
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 2
